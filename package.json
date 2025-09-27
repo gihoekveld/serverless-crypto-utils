@@ -16,7 +16,7 @@
     "build": "tsup src/index.ts --dts --format esm,cjs --out-dir dist",
     "prepublishOnly": "npm run build",
     "deploy": "act",
-    "test": "tsx --test 'tests/**/*.spec.ts' --testTimeout=10000"
+    "test": "tsx --test tests/*.spec.ts --testTimeout=10000"
   },
   "files": [
     "dist"

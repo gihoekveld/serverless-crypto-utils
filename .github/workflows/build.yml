@@ -27,6 +27,7 @@ jobs:
 
       - name: Run tests
         run: npm test
+        working-directory: ${{ github.workspace }}
 
       - name: Publish to NPM
         if: github.ref == 'refs/heads/main' # opcional: só publica da branch main
