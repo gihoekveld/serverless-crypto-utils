@@ -1,6 +1,6 @@
 {
   "name": "serverless-crypto-utils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Giselle Hoekveld Silva",
   "description": "Utilitários criptográficos seguros para ambientes Cloudflare Workers e outras plataformas Serverless/Edge.",
   "main": "dist/index.js",
