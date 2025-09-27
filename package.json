@@ -2,7 +2,7 @@
   "name": "serverless-crypto-utils",
   "version": "1.0.1",
   "author": "Giselle Hoekveld Silva",
-  "description": "Utilitários criptográficos seguros para ambientes Cloudflare Workers e outras plataformas Serverless/Edge.",
+  "description": "Secure, zero-dependency crypto utilities for serverless & Edge platforms (Cloudflare, Deno, Vercel) using Web Crypto API",
   "main": "dist/index.js",
   "type": "module",
   "types": "dist/index.d.ts",
