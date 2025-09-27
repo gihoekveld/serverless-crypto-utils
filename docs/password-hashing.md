@@ -11,7 +11,7 @@ Projetado para ambientes **Serverless/Edge**, como Cloudflare Workers, com supor
 Gera um hash seguro para uma senha.
 
 ```typescript
-import { hashPassword } from "password-hashing";
+import { hashPassword } from "serverless-crypto-utils";
 
 const hashed = await hashPassword("mySecretPassword", {
   pepper: "myPepper", // opcional, segredo global
@@ -34,7 +34,7 @@ console.log(hashed); // e.g. "500000.randomSaltInBase64Url.hashInBase64Url"
 Verifica se uma senha corresponde a um hash armazenado.
 
 ```typescript
-import { verifyPassword } from "password-hashing";
+import { verifyPassword } from "serverless-crypto-utils";
 
 const isValid = await verifyPassword(
   "mySecretPassword",
@@ -61,7 +61,7 @@ console.log(isValid); // true ou false
 📌 Exemplo completo
 
 ```typescript
-import { hashPassword, verifyPassword } from "password-hashing";
+import { hashPassword, verifyPassword } from "serverless-crypto-utils";
 
 const pepper = process.env.PEPPER || "secretGlobalPepper";
 

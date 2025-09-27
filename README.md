@@ -20,6 +20,7 @@ O pacote é dividido em categorias de funções:
 | Categoria                                           | Descrição                                                            | Exemplos de Funções              |
 | :-------------------------------------------------- | :------------------------------------------------------------------- | :------------------------------- |
 | password-hashing [README](docs/password-hashing.md) | Funções para gerar e verificar hashes de senhas (PBKDF2-HMAC-SHA256) | `hashPassword`, `verifyPassword` |
+| id-generation [README](docs/id-generation.md)       | Funções para gerar IDs únicos                                        | `uuidV4`, `ulid`                 |
 | criptografia [em breve]                             | Funções para criptografia simétrica e assimétrica                    | `encrypt`, `decrypt`             |
 
 Atualmente o pacote inclui apenas os úteis de hash de senha. Novos módulos serão adicionados progressivamente.
