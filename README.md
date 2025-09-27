@@ -1,15 +1,17 @@
 # 🔒 Serverless Crypto Utilities
 
+Serverless Crypto Utilities é um pacote minimalista para operações criptográficas rápidas e seguras na Edge.
+
 [![npm](https://img.shields.io/npm/v/serverless-crypto-utils)](https://www.npmjs.com/package/serverless-crypto-utils)
-[![npm downloads](https://img.shields.io/npm/dm/serverless-crypto-utils)](https://www.npmjs.com/package/serverless-crypto-utils)
+[![npm downloads](https://img.shields.io/npm/dt/serverless-crypto-utils)](https://www.npmjs.com/package/serverless-crypto-utils)
 ![Build](https://github.com/gihoekveld/serverless-crypto-utils/actions/workflows/build.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Este é um pacote de utilitários criptográficos para ambientes _Serverless_ e **Edge Computing**, como **Cloudflare Workers** ou Vercel Edge Functions.
+Serverless Crypto Utilities é um pacote minimalista para operações criptográficas rápidas e seguras na Edge.
 
-Fornece funções seguras para hashing, criptografia, geração de tokens e outras operações criptográficas, projetadas para alta performance e facilidade de uso.
+O pacote fornece funções para **hashing, criptografia, geração de tokens e outras operações criptográficas**, projetadas para máxima performance, baixo bundle size e segurança nativa.
 
-A biblioteca utiliza exclusivamente a **Web Crypto API** nativa, garantindo velocidade máxima e um _bundle size_ mínimo, sem dependências externas.
+Todas as funções utilizam exclusivamente a **Web Crypto API**, sem dependências externas.
 
 ## 🔹 Estrutura do pacote
 
@@ -18,6 +20,7 @@ O pacote é dividido em categorias de funções:
 | Categoria                                           | Descrição                                                            | Exemplos de Funções              |
 | :-------------------------------------------------- | :------------------------------------------------------------------- | :------------------------------- |
 | password-hashing [README](docs/password-hashing.md) | Funções para gerar e verificar hashes de senhas (PBKDF2-HMAC-SHA256) | `hashPassword`, `verifyPassword` |
+| criptografia [em breve]                             | Funções para criptografia simétrica e assimétrica                    | `encrypt`, `decrypt`             |
 
 Atualmente o pacote inclui apenas os úteis de hash de senha. Novos módulos serão adicionados progressivamente.
 
@@ -66,7 +69,13 @@ console.log("Senha correta?", isValid);
 
 📌 Roadmap
 
-- Adicionar hashing genérico (SHA-256, SHA-512).
-- Criptografia simétrica (AES-GCM).
-- Funções para geração de tokens seguros (UUID, random bytes).
-- Helpers para JWT e HMAC.
+| #   | Funcionalidade                         | Status    |
+| --- | -------------------------------------- | --------- |
+| 1   | Hashing genérico (SHA-256, SHA-512)    | Planejado |
+| 2   | Criptografia simétrica (AES-GCM)       | Planejado |
+| 3   | Funções para geração de tokens seguros | Planejado |
+| 4   | Helpers para JWT e HMAC                | Planejado |
+
+🤝 Contribuição
+
+Contribuições, sugestões e correções são bem-vindas! Abra issues ou PRs no GitHub para colaborar.
