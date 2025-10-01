@@ -1,7 +1,5 @@
 # 🔒 Serverless Crypto Utilities
 
-Serverless Crypto Utilities é um pacote minimalista para operações criptográficas rápidas e seguras na Edge.
-
 [![npm](https://img.shields.io/npm/v/serverless-crypto-utils)](https://www.npmjs.com/package/serverless-crypto-utils)
 [![npm downloads](https://img.shields.io/npm/dt/serverless-crypto-utils)](https://www.npmjs.com/package/serverless-crypto-utils)
 ![Build](https://github.com/gihoekveld/serverless-crypto-utils/actions/workflows/build.yml/badge.svg)
@@ -13,17 +11,18 @@ O pacote fornece funções para **hashing, criptografia, geração de tokens e o
 
 Todas as funções utilizam exclusivamente a **Web Crypto API**, sem dependências externas.
 
-## 🔹 Estrutura do pacote
+## 🔹 Estrutura do Pacote
 
 O pacote é dividido em categorias de funções:
 
-| Categoria                                           | Descrição                                                            | Exemplos de Funções              |
-| :-------------------------------------------------- | :------------------------------------------------------------------- | :------------------------------- |
-| password-hashing [README](docs/password-hashing.md) | Funções para gerar e verificar hashes de senhas (PBKDF2-HMAC-SHA256) | `hashPassword`, `verifyPassword` |
-| id-generation [README](docs/id-generation.md)       | Funções para gerar IDs únicos                                        | `uuidV4`, `ulid`                 |
-| criptografia [em breve]                             | Funções para criptografia simétrica e assimétrica                    | `encrypt`, `decrypt`             |
+| Categoria                                           | Descrição                                                                           | Exemplos de Funções                          |
+| :-------------------------------------------------- | :---------------------------------------------------------------------------------- | :------------------------------------------- |
+| password-hashing [README](docs/password-hashing.md) | Funções para gerar e verificar hashes de senhas (PBKDF2-HMAC-SHA256)                | `hashPassword`, `verifyPassword`             |
+| access-token [README](docs/access-token.md)         | Funções para criar e verificar tokens de acesso seguros (AES-256-GCM + HMAC-SHA256) | `createAccessToken`, `verifyAccessTokenSafe` |
+| id-generation [README](docs/id-generation.md)       | Funções para gerar IDs únicos                                                       | `uuidV4`, `ulid`                             |
+| criptografia [em breve]                             | Funções para criptografia simétrica e assimétrica                                   | `encrypt`, `decrypt`                         |
 
-Atualmente o pacote inclui apenas os úteis de hash de senha. Novos módulos serão adicionados progressivamente.
+Atualmente o pacote inclui módulos para hashing de senhas, tokens de acesso seguros e geração de IDs. Novos módulos serão adicionados progressivamente.
 
 ---
 
@@ -45,6 +44,8 @@ pnpm add serverless-crypto-utils
 
 ## 🚀 Uso Básico
 
+### Password Hashing
+
 ```typescript
 import {
   hashPassword,
@@ -60,22 +61,76 @@ console.log("Hash:", hash);
 console.log("Senha correta?", isValid);
 ```
 
-> Para detalhes completos, consulte [README](docs/password-hashing.md)
+### Access Token
+
+```typescript
+import {
+  createAccessToken,
+  verifyAccessTokenSafe,
+  TokenErrorCode,
+} from "serverless-crypto-utils";
+
+// Criar token
+const token = await createAccessToken({
+  encryptionSecret: process.env.TOKEN_ENCRYPTION_SECRET,
+  signingSecret: process.env.TOKEN_SIGNING_SECRET,
+  payload: { userId: 123, role: "admin" },
+  expiresInSeconds: 900, // 15 minutos
+});
+
+// Verificar token
+const result = await verifyAccessTokenSafe({
+  encryptionSecret: process.env.TOKEN_ENCRYPTION_SECRET,
+  signingSecret: process.env.TOKEN_SIGNING_SECRET,
+  accessToken: token,
+});
+
+if (result.success) {
+  const user = JSON.parse(result.data);
+  console.log("Acesso autorizado:", user.userId);
+} else {
+  console.log("Acesso negado:", result.error.message);
+}
+```
+
+### ID Generation
+
+```typescript
+import { uuidV4, ulid } from "serverless-crypto-utils";
+
+// Gerar UUID v4
+const uuid = uuidV4();
+console.log("UUID:", uuid); // e.g. "3b12f1df-5232-4f0c-8b1d-3f3f9f1b5ec1"
+
+// Gerar ULID (lexicograficamente ordenável)
+const ulidId = ulid();
+console.log("ULID:", ulidId); // e.g. "01F8MECHZX3TBDSZ7EXAMPLE"
+```
+
+> Para detalhes completos, consulte:
+>
+> - [Password Hashing](docs/password-hashing.md)
+> - [Access Token](docs/access-token.md)
+> - [ID Generation](docs/id-generation.md)
 
 ## 🔒 Segurança
 
 - Todos os algoritmos usam a Web Crypto API nativa, garantindo segurança nativa e compatibilidade com Workers.
-- Salt aleatório e pepper opcional para proteção adicional.
-- Comparações timing-safe para evitar ataques de tempo.
+- **Password Hashing**: Salt aleatório e pepper opcional para proteção adicional.
+- **Access Tokens**: Criptografia AES-256-GCM + assinatura HMAC-SHA256 com expiração automática.
+- **Comparações timing-safe** para evitar ataques de tempo.
+- **Zero dependências externas** para minimizar superfície de ataque.
 
 📌 Roadmap
 
-| #   | Funcionalidade                         | Status    |
-| --- | -------------------------------------- | --------- |
-| 1   | Hashing genérico (SHA-256, SHA-512)    | Planejado |
-| 2   | Criptografia simétrica (AES-GCM)       | Planejado |
-| 3   | Funções para geração de tokens seguros | Planejado |
-| 4   | Helpers para JWT e HMAC                | Planejado |
+| #   | Funcionalidade                            | Status    |
+| --- | ----------------------------------------- | --------- |
+| ✅  | Password hashing (PBKDF2-HMAC-SHA256)     | Concluído |
+| ✅  | Access tokens (AES-256-GCM + HMAC-SHA256) | Concluído |
+| ✅  | Geração de IDs únicos (UUID, ULID)        | Concluído |
+| 🔄  | Hashing genérico (SHA-256, SHA-512)       | Planejado |
+| 🔄  | Criptografia simétrica (AES-GCM)          | Planejado |
+| 🔄  | Helpers para JWT                          | Planejado |
 
 🤝 Contribuição
 
