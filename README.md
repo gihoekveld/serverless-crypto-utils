@@ -42,6 +42,63 @@ yarn add serverless-crypto-utils
 pnpm add serverless-crypto-utils
 ```
 
+### 📦 Bundle Size Optimization
+
+### Importação Modular vs Completa
+
+| Módulo             | Size (ESM) | Size (CJS) | Use Case                  |
+| :----------------- | :--------- | :--------- | :------------------------ |
+| `password-hashing` | 117 B      | 3.45 KB    | Apenas autenticação       |
+| `access-token`     | 219 B      | 9.43 KB    | Apenas tokens seguros     |
+| `id-generation`    | 85 B       | 1.64 KB    | Apenas geração de IDs     |
+| **Full package**   | 399 B      | 12.53 KB   | Múltiplas funcionalidades |
+
+### Exemplo de Otimização
+
+```typescript
+// ❌ Bundle maior (12.53 KB)
+import { hashPassword } from "serverless-crypto-utils";
+
+// ✅ Bundle menor (3.45 KB)
+import { hashPassword } from "serverless-crypto-utils/password-hashing";
+```
+
+**Redução de até 73% no bundle size** usando imports modulares! 🚀
+
+Para reduzir o bundle size, você pode importar apenas as funções que precisa:
+
+```typescript
+// Apenas password hashing
+import {
+  hashPassword,
+  verifyPassword,
+} from "serverless-crypto-utils/password-hashing";
+
+// Apenas access tokens
+import {
+  createAccessToken,
+  verifyAccessTokenSafe,
+} from "serverless-crypto-utils/access-token";
+
+// Apenas ID generation
+import { uuidV4, ulid } from "serverless-crypto-utils/id-generation";
+```
+
+### 📦 Import Completo
+
+Ou importe tudo de uma vez:
+
+```typescript
+import {
+  hashPassword,
+  verifyPassword,
+  createAccessToken,
+  verifyAccessTokenSafe,
+  uuidV4,
+  ulid,
+} from "serverless-crypto-utils";
+```
+
 ## 🚀 Uso Básico
 
 ### Password Hashing
@@ -68,7 +125,7 @@ import {
   createAccessToken,
   verifyAccessTokenSafe,
   TokenErrorCode,
-} from "serverless-crypto-utils";
+} from "serverless-crypto-utils/access-token";
 
 // Criar token
 const token = await createAccessToken({
@@ -96,7 +153,7 @@ if (result.success) {
 ### ID Generation
 
 ```typescript
-import { uuidV4, ulid } from "serverless-crypto-utils";
+import { uuidV4, ulid } from "serverless-crypto-utils/id-generation";
 
 // Gerar UUID v4
 const uuid = uuidV4();
