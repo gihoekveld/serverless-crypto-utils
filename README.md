@@ -121,7 +121,7 @@ console.log("ULID:", ulidId); // e.g. "01F8MECHZX3TBDSZ7EXAMPLE"
 - **Comparações timing-safe** para evitar ataques de tempo.
 - **Zero dependências externas** para minimizar superfície de ataque.
 
-📌 Roadmap
+## 📌 Roadmap
 
 | #   | Funcionalidade                            | Status    |
 | --- | ----------------------------------------- | --------- |
@@ -132,6 +132,6 @@ console.log("ULID:", ulidId); // e.g. "01F8MECHZX3TBDSZ7EXAMPLE"
 | 🔄  | Criptografia simétrica (AES-GCM)          | Planejado |
 | 🔄  | Helpers para JWT                          | Planejado |
 
-🤝 Contribuição
+## 🤝 Contribuição
 
 Contribuições, sugestões e correções são bem-vindas! Abra issues ou PRs no GitHub para colaborar.
