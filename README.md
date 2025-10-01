@@ -42,7 +42,7 @@ yarn add serverless-crypto-utils
 pnpm add serverless-crypto-utils
 ```
 
-### 📦 Bundle Size Optimization
+## 📦 Bundle Size Optimization
 
 ### Importação Modular vs Completa
 
