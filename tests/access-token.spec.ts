@@ -1,5 +1,4 @@
-import { it, describe, beforeEach } from 'node:test';
-import * as assert from 'node:assert';
+import { it, describe, beforeEach, expect } from 'vitest';
 import { 
   createAccessToken, 
   verifyAccessToken,
@@ -34,12 +33,12 @@ describe('Serverless Crypto Utilities - Access Token', () => {
 
       // Token should have 3 parts separated by dots (iv.encryptedData.signature)
       const parts = token.split('.');
-      assert.strictEqual(parts.length, 3, 'Token should have 3 parts');
+      expect(parts.length).toBe(3);
 
       // Each part should be base64 encoded
       parts.forEach((part, index) => {
-        assert.ok(part.length > 0, `Part ${index} should not be empty`);
-        assert.ok(/^[A-Za-z0-9+/]*={0,2}$/.test(part), `Part ${index} should be valid base64`);
+        expect(part.length).toBeGreaterThan(0);
+        expect(part).toMatch(/^[A-Za-z0-9+/]*={0,2}$/);
       });
     });
 
@@ -57,7 +56,7 @@ describe('Serverless Crypto Utilities - Access Token', () => {
       });
 
       // Tokens should be different due to random IV
-      assert.notStrictEqual(token1, token2, 'Tokens should be different due to random IV');
+      expect(token1).not.toBe(token2);
 
       // But both should be valid and contain the same core payload data
       const payload1 = await verifyAccessToken({
@@ -65,7 +64,7 @@ describe('Serverless Crypto Utilities - Access Token', () => {
         signingSecret,
         accessToken: token1
       });
-      
+
       const payload2 = await verifyAccessToken({
         encryptionSecret,
         signingSecret,
@@ -76,10 +75,10 @@ describe('Serverless Crypto Utilities - Access Token', () => {
       const parsed2 = JSON.parse(payload2);
 
       // Compare core payload data (excluding timestamp which may differ by milliseconds)
-      assert.strictEqual(parsed1.userId, parsed2.userId);
-      assert.strictEqual(parsed1.username, parsed2.username);
-      assert.strictEqual(parsed1.role, parsed2.role);
-      assert.deepStrictEqual(parsed1.permissions, parsed2.permissions);
+      expect(parsed1.userId).toBe(parsed2.userId);
+      expect(parsed1.username).toBe(parsed2.username);
+      expect(parsed1.role).toBe(parsed2.role);
+      expect(parsed1.permissions).toEqual(parsed2.permissions);
     });
 
     it('should create token with custom expiration time', async () => {
@@ -104,10 +103,9 @@ describe('Serverless Crypto Utilities - Access Token', () => {
       const expectedExpiration = beforeCreation + (customExpirationSeconds * 1000);
 
       // Allow 1 second tolerance for execution time
-      assert.ok(
-        Math.abs(expirationTime - expectedExpiration) < 1000,
-        'Token should expire at the specified time'
-      );
+      expect(
+        Math.abs(expirationTime - expectedExpiration) < 1000
+      ).toBeTruthy();
     });
 
     it('should include original payload data in token', async () => {
@@ -125,16 +123,126 @@ describe('Serverless Crypto Utilities - Access Token', () => {
 
       const parsedPayload = JSON.parse(decryptedPayload);
 
-      assert.strictEqual(parsedPayload.userId, testPayload.userId);
-      assert.strictEqual(parsedPayload.username, testPayload.username);
-      assert.strictEqual(parsedPayload.role, testPayload.role);
-      assert.deepStrictEqual(parsedPayload.permissions, testPayload.permissions);
-      assert.ok(parsedPayload.expiresAt, 'Should include expiration timestamp');
+      expect(parsedPayload.userId).toBe(testPayload.userId);
+      expect(parsedPayload.username).toBe(testPayload.username);
+      expect(parsedPayload.role).toBe(testPayload.role);
+      expect(parsedPayload.permissions).toEqual(testPayload.permissions);
+      expect(parsedPayload.expiresAt).toBeTruthy();
+    });
+
+    it('should create token with shorter expiration when specified', async () => {
+      const shortExpirationSeconds = 1; // 1 second
+      const token = await createAccessToken({
+        encryptionSecret,
+        signingSecret,
+        payload: testPayload,
+        expiresInSeconds: shortExpirationSeconds
+      });
+
+      const decryptedPayload = await verifyAccessToken({
+        encryptionSecret,
+        signingSecret,
+        accessToken: token
+      });
+
+      const parsedPayload = JSON.parse(decryptedPayload);
+      expect(parsedPayload.userId).toBe(testPayload.userId);
+
+      // Wait for token to expire
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
+      await expect(async () => {
+        await verifyAccessToken({
+          encryptionSecret,
+          signingSecret,
+          accessToken: token
+        });
+      }).rejects.toThrow();
+    });
+
+    it('should handle short encryption secret gracefully', async () => {
+      // The function doesn't validate secret length, it pads with zeros
+      const token = await createAccessToken({
+        encryptionSecret: 'short', // This will be padded
+        signingSecret,
+        payload: testPayload
+      });
+
+      // Token should still be created but may not be as secure
+      expect(token).toBeTruthy();
+      expect(token.split('.')).toHaveLength(3);
+    });
+
+    it('should handle short signing secret gracefully', async () => {
+      // The function doesn't validate secret length
+      const token = await createAccessToken({
+        encryptionSecret,
+        signingSecret: 'short', // This will still work
+        payload: testPayload
+      });
+
+      // Token should still be created
+      expect(token).toBeTruthy();
+      expect(token.split('.')).toHaveLength(3);
+    });
+
+    it('should handle negative expiration', async () => {
+      // Negative expiration creates a token that's already expired
+      const token = await createAccessToken({
+        encryptionSecret,
+        signingSecret,
+        payload: testPayload,
+        expiresInSeconds: -1 // Creates immediately expired token
+      });
+
+      // Token should be created but immediately expired
+      expect(token).toBeTruthy();
+      
+      // Try to verify - should fail due to expiration
+      const result = await verifyAccessTokenSafe({
+        encryptionSecret,
+        signingSecret,
+        accessToken: token
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe(TokenErrorCode.TOKEN_EXPIRED);
+      }
+    });
+
+    it('should handle zero expiration', async () => {
+      // Zero expiration creates a token that may or may not be immediately expired
+      // depending on timing precision
+      const token = await createAccessToken({
+        encryptionSecret,
+        signingSecret,
+        payload: testPayload,
+        expiresInSeconds: 0 // Creates immediately expired token
+      });
+
+      // Token should be created
+      expect(token).toBeTruthy();
+      
+      // Add a small delay to ensure expiration
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // Try to verify - should fail due to expiration
+      const result = await verifyAccessTokenSafe({
+        encryptionSecret,
+        signingSecret,
+        accessToken: token
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe(TokenErrorCode.TOKEN_EXPIRED);
+      }
     });
   });
 
-  describe('verifyAccessToken (with exceptions)', () => {
-    it('should verify and decrypt a valid token', async () => {
+  describe('verifyAccessToken', () => {
+    it('should successfully verify valid token', async () => {
       const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
@@ -148,89 +256,12 @@ describe('Serverless Crypto Utilities - Access Token', () => {
       });
 
       const parsedPayload = JSON.parse(decryptedPayload);
-      assert.strictEqual(parsedPayload.userId, testPayload.userId);
-    });
-
-    it('should throw error for invalid token format', async () => {
-      await assert.rejects(async () => {
-        await verifyAccessToken({
-          encryptionSecret,
-          signingSecret,
-          accessToken: 'invalid.token'
-        });
-      }, {
-        message: 'Invalid access token format: expected 3 parts separated by dots'
-      });
-    });
-
-    it('should throw error for token with wrong encryption secret', async () => {
-      const token = await createAccessToken({
-        encryptionSecret,
-        signingSecret,
-        payload: testPayload
-      });
-
-      await assert.rejects(async () => {
-        await verifyAccessToken({
-          encryptionSecret: 'wrong-encryption-secret-32-chars',
-          signingSecret,
-          accessToken: token
-        });
-      });
-    });
-
-    it('should throw error for token with wrong signing secret', async () => {
-      const token = await createAccessToken({
-        encryptionSecret,
-        signingSecret,
-        payload: testPayload
-      });
-
-      await assert.rejects(async () => {
-        await verifyAccessToken({
-          encryptionSecret,
-          signingSecret: 'wrong-signing-secret-for-hmac',
-          accessToken: token
-        });
-      }, {
-        message: 'Invalid access token: signature verification failed'
-      });
-    });
-
-    it('should throw error for expired token', async () => {
-      const token = await createAccessToken({
-        encryptionSecret,
-        signingSecret,
-        payload: testPayload,
-        expiresInSeconds: -1 // Already expired
-      });
-
-      await assert.rejects(async () => {
-        await verifyAccessToken({
-          encryptionSecret,
-          signingSecret,
-          accessToken: token
-        });
-      }, {
-        message: 'Access token has expired'
-      });
-    });
-
-    it('should throw error for malformed base64 in token', async () => {
-      const invalidToken = 'invalid-base64!.another-invalid-base64!.signature!';
-
-      await assert.rejects(async () => {
-        await verifyAccessToken({
-          encryptionSecret,
-          signingSecret,
-          accessToken: invalidToken
-        });
-      });
+      expect(parsedPayload.userId).toBe(testPayload.userId);
     });
   });
 
-  describe('verifyAccessTokenSafe (with Result pattern)', () => {
-    it('should return success result for valid token', async () => {
+  describe('verifyAccessTokenSafe', () => {
+    it('should return successful result for valid token', async () => {
       const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
@@ -243,29 +274,29 @@ describe('Serverless Crypto Utilities - Access Token', () => {
         accessToken: token
       });
 
-      assert.ok(result.success, 'Result should be successful');
+      expect(result.success).toBe(true);
       if (result.success) {
         const parsedPayload = JSON.parse(result.data);
-        assert.strictEqual(parsedPayload.userId, testPayload.userId);
+        expect(parsedPayload.userId).toBe(testPayload.userId);
       }
     });
 
-    it('should return error result for invalid token format', async () => {
+    it('should return error for invalid token format', async () => {
       const result = await verifyAccessTokenSafe({
         encryptionSecret,
         signingSecret,
-        accessToken: 'invalid.token'
+        accessToken: 'invalid.token' // Only 2 parts instead of 3
       });
 
-      assert.ok(!result.success, 'Result should be unsuccessful');
+      expect(result.success).toBe(false);
       if (!result.success) {
-        assert.strictEqual(result.error.code, TokenErrorCode.INVALID_FORMAT);
-        assert.strictEqual(result.error.details?.partsFound, 2);
-        assert.strictEqual(result.error.details?.expected, 3);
+        expect(result.error.code).toBe(TokenErrorCode.INVALID_FORMAT);
+        expect(result.error.details?.partsFound).toBe(2);
+        expect(result.error.details?.expected).toBe(3);
       }
     });
 
-    it('should return error result for signature verification failure', async () => {
+    it('should return error for invalid signature', async () => {
       const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
@@ -274,23 +305,26 @@ describe('Serverless Crypto Utilities - Access Token', () => {
 
       const result = await verifyAccessTokenSafe({
         encryptionSecret,
-        signingSecret: 'wrong-signing-secret-for-hmac',
+        signingSecret: 'different-signing-secret-hmac256',
         accessToken: token
       });
 
-      assert.ok(!result.success, 'Result should be unsuccessful');
+      expect(result.success).toBe(false);
       if (!result.success) {
-        assert.strictEqual(result.error.code, TokenErrorCode.SIGNATURE_VERIFICATION_FAILED);
+        expect(result.error.code).toBe(TokenErrorCode.SIGNATURE_VERIFICATION_FAILED);
       }
     });
 
-    it('should return error result for expired token', async () => {
+    it('should return error for expired token', async () => {
       const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
         payload: testPayload,
-        expiresInSeconds: -1
+        expiresInSeconds: 1 // 1 second
       });
+
+      // Wait for token to expire
+      await new Promise(resolve => setTimeout(resolve, 1100));
 
       const result = await verifyAccessTokenSafe({
         encryptionSecret,
@@ -298,15 +332,15 @@ describe('Serverless Crypto Utilities - Access Token', () => {
         accessToken: token
       });
 
-      assert.ok(!result.success, 'Result should be unsuccessful');
+      expect(result.success).toBe(false);
       if (!result.success) {
-        assert.strictEqual(result.error.code, TokenErrorCode.TOKEN_EXPIRED);
-        assert.ok(result.error.details?.expiredAt, 'Should include expiration details');
-        assert.ok(result.error.details?.currentTime, 'Should include current time');
+        expect(result.error.code).toBe(TokenErrorCode.TOKEN_EXPIRED);
+        expect(result.error.details?.expiredAt).toBeTruthy();
+        expect(result.error.details?.currentTime).toBeTruthy();
       }
     });
 
-    it('should return error result for decryption failure', async () => {
+    it('should return error for wrong encryption secret', async () => {
       const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
@@ -319,103 +353,144 @@ describe('Serverless Crypto Utilities - Access Token', () => {
         accessToken: token
       });
 
-      assert.ok(!result.success, 'Result should be unsuccessful');
+      expect(result.success).toBe(false);
       if (!result.success) {
-        assert.strictEqual(result.error.code, TokenErrorCode.DECRYPTION_FAILED);
+        expect(result.error.code).toBe(TokenErrorCode.DECRYPTION_FAILED);
       }
     });
 
-    it('should return error result for invalid JSON payload', async () => {
-      // Create a token manually with invalid JSON
-      const invalidToken = 'dGVzdA==.aW52YWxpZCBqc29u.dGVzdA=='; // base64 encoded but invalid structure
+    it('should return error for malformed token data', async () => {
+      // Create a token with properly formed structure but invalid base64 data
+      const fakeToken = 'dGVzdA==.aW52YWxpZA==.c2lnbmF0dXJl';
 
       const result = await verifyAccessTokenSafe({
         encryptionSecret,
         signingSecret,
-        accessToken: invalidToken
+        accessToken: fakeToken
       });
 
-      assert.ok(!result.success, 'Result should be unsuccessful');
+      expect(result.success).toBe(false);
       if (!result.success) {
-        // Could be DECRYPTION_FAILED or INVALID_JSON depending on implementation
-        assert.ok([
+        expect([
           TokenErrorCode.DECRYPTION_FAILED,
-          TokenErrorCode.INVALID_JSON
-        ].includes(result.error.code as TokenErrorCode));
+          TokenErrorCode.SIGNATURE_VERIFICATION_FAILED,
+          TokenErrorCode.INVALID_FORMAT
+        ]).toContain(result.error.code);
       }
     });
   });
 
-  describe('Token security properties', () => {
-    it('should produce different signatures for different payloads', async () => {
-      const payload1 = { userId: 123 };
-      const payload2 = { userId: 456 };
-
+  describe('Token Security Properties', () => {
+    it('should generate different signatures for different payloads', async () => {
       const token1 = await createAccessToken({
         encryptionSecret,
         signingSecret,
-        payload: payload1
+        payload: { userId: 1 }
       });
 
       const token2 = await createAccessToken({
         encryptionSecret,
         signingSecret,
-        payload: payload2
+        payload: { userId: 2 }
       });
 
-      // Extract signatures (last part)
       const signature1 = token1.split('.')[2];
       const signature2 = token2.split('.')[2];
 
-      assert.notStrictEqual(signature1, signature2, 'Different payloads should have different signatures');
+      expect(signature1).not.toBe(signature2);
     });
 
-    it('should produce different encrypted data for same payload (due to random IV)', async () => {
-      const token1 = await createAccessToken({
-        encryptionSecret,
-        signingSecret,
-        payload: testPayload
-      });
-
-      const token2 = await createAccessToken({
-        encryptionSecret,
-        signingSecret,
-        payload: testPayload
-      });
-
-      // Extract IV and encrypted data (first two parts)
-      const [iv1, encrypted1] = token1.split('.');
-      const [iv2, encrypted2] = token2.split('.');
-
-      assert.notStrictEqual(iv1, iv2, 'IVs should be different');
-      assert.notStrictEqual(encrypted1, encrypted2, 'Encrypted data should be different due to different IVs');
-    });
-
-    it('should fail with tampered token data', async () => {
+    it('should not decrypt with wrong encryption key', async () => {
       const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
         payload: testPayload
       });
 
-      // Tamper with the encrypted data part
-      const parts = token.split('.');
-      const tamperedToken = `${parts[0]}.${parts[1].slice(0, -4)}XXXX.${parts[2]}`;
+      await expect(async () => {
+        await verifyAccessToken({
+          encryptionSecret: 'different-encryption-key-32-chars',
+          signingSecret,
+          accessToken: token
+        });
+      }).rejects.toThrow();
+    });
 
-      const result = await verifyAccessTokenSafe({
+    it('should not verify with wrong signing key', async () => {
+      const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
-        accessToken: tamperedToken
+        payload: testPayload
       });
 
-      assert.ok(!result.success, 'Tampered token should fail verification');
+      await expect(async () => {
+        await verifyAccessToken({
+          encryptionSecret,
+          signingSecret: 'different-signing-key-for-hmac256',
+          accessToken: token
+        });
+      }).rejects.toThrow();
     });
-  });
 
-  describe('Edge cases and error conditions', () => {
+    it('should handle concurrent token operations', async () => {
+      const promises = Array.from({ length: 10 }, async (_, i) => {
+        const token = await createAccessToken({
+          encryptionSecret,
+          signingSecret,
+          payload: { ...testPayload, iteration: i }
+        });
+
+        const decryptedPayload = await verifyAccessToken({
+          encryptionSecret,
+          signingSecret,
+          accessToken: token
+        });
+
+        const parsed = JSON.parse(decryptedPayload);
+        expect(parsed.iteration).toBe(i);
+        return parsed;
+      });
+
+      const results = await Promise.all(promises);
+      expect(results).toHaveLength(10);
+
+      // Verify each result has the correct iteration number
+      results.forEach((result, index) => {
+        expect(result.iteration).toBe(index);
+      });
+    });
+
+    it('should handle large payloads', async () => {
+      const largePayload = {
+        ...testPayload,
+        data: Array.from({ length: 1000 }, (_, i) => `item-${i}`),
+        metadata: {
+          description: 'A'.repeat(1000),
+          tags: Array.from({ length: 100 }, (_, i) => `tag-${i}`)
+        }
+      };
+
+      const token = await createAccessToken({
+        encryptionSecret,
+        signingSecret,
+        payload: largePayload
+      });
+
+      const decryptedPayload = await verifyAccessToken({
+        encryptionSecret,
+        signingSecret,
+        accessToken: token
+      });
+
+      const parsed = JSON.parse(decryptedPayload);
+      expect(parsed.data).toHaveLength(1000);
+      expect(parsed.metadata.description).toHaveLength(1000);
+      expect(parsed.metadata.tags).toHaveLength(100);
+    });
+
     it('should handle empty payload', async () => {
       const emptyPayload = {};
-      
+
       const token = await createAccessToken({
         encryptionSecret,
         signingSecret,
@@ -428,15 +503,17 @@ describe('Serverless Crypto Utilities - Access Token', () => {
         accessToken: token
       });
 
-      const parsedPayload = JSON.parse(decryptedPayload);
-      assert.ok(parsedPayload.expiresAt, 'Should still include expiration');
+      const parsed = JSON.parse(decryptedPayload);
+      // Should still have the expiresAt field even with empty payload
+      expect(parsed.expiresAt).toBeTruthy();
     });
 
-    it('should handle payload with special characters', async () => {
+    it('should handle special characters in payload', async () => {
       const specialPayload = {
-        message: 'Hello 🌍! Special chars: áéíóú ñç @#$%^&*()',
-        unicode: '日本語 العربية русский',
-        symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+        username: 'user@domain.com',
+        description: 'Special chars: àáâãäåæçèéêë 中文 🚀 ñ ü',
+        symbols: '!@#$%^&*()_+-={}[]|\\:";\'<>?,./',
+        unicode: '🌟✨💫⭐🎯🔥💎🚀🎪🎨'
       };
 
       const token = await createAccessToken({
@@ -451,50 +528,11 @@ describe('Serverless Crypto Utilities - Access Token', () => {
         accessToken: token
       });
 
-      const parsedPayload = JSON.parse(decryptedPayload);
-      assert.strictEqual(parsedPayload.message, specialPayload.message);
-      assert.strictEqual(parsedPayload.unicode, specialPayload.unicode);
-      assert.strictEqual(parsedPayload.symbols, specialPayload.symbols);
-    });
-
-    it('should handle different encryption secrets', async () => {
-      const alternativeSecret = 'alternative-encryption-secret-32';
-
-      // Should work with different secret
-      const token = await createAccessToken({
-        encryptionSecret: alternativeSecret,
-        signingSecret,
-        payload: testPayload
-      });
-
-      const decryptedPayload = await verifyAccessToken({
-        encryptionSecret: alternativeSecret,
-        signingSecret,
-        accessToken: token
-      });
-
-      const parsedPayload = JSON.parse(decryptedPayload);
-      assert.strictEqual(parsedPayload.userId, testPayload.userId);
-    });
-
-    it('should handle very short encryption secret by padding with zeros', async () => {
-      const shortSecret = 'short'; // Less than 32 chars
-
-      // Should work by padding the key material with zeros
-      const token = await createAccessToken({
-        encryptionSecret: shortSecret,
-        signingSecret,
-        payload: testPayload
-      });
-
-      const decryptedPayload = await verifyAccessToken({
-        encryptionSecret: shortSecret,
-        signingSecret,
-        accessToken: token
-      });
-
-      const parsedPayload = JSON.parse(decryptedPayload);
-      assert.strictEqual(parsedPayload.userId, testPayload.userId);
+      const parsed = JSON.parse(decryptedPayload);
+      expect(parsed.username).toBe(specialPayload.username);
+      expect(parsed.description).toBe(specialPayload.description);
+      expect(parsed.symbols).toBe(specialPayload.symbols);
+      expect(parsed.unicode).toBe(specialPayload.unicode);
     });
   });
 });

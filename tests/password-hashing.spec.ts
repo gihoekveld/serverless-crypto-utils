@@ -1,5 +1,4 @@
-import { it, describe } from 'node:test';
-import * as assert from 'node:assert';
+import { it, describe, expect } from 'vitest';
 import { 
   hashPassword, 
   verifyPassword 
@@ -12,14 +11,14 @@ describe('Serverless Crypto Utilities - Password Hashing', () => {
     const stored = await hashPassword("minhaSenhaSecreta");
     const ok = await verifyPassword("minhaSenhaSecreta", stored);
 
-    assert.ok(ok);
+    expect(ok).toBeTruthy();
   });
 
   it('should fail to invalid password', async () => {
     const stored = await hashPassword("minhaSenhaSecreta");
     const fail = await verifyPassword("outraSenha", stored);
 
-    assert.ok(!fail);
+    expect(fail).toBeFalsy();
   });
 
   it('should concatenate salt with hashed password', async () => {
@@ -31,7 +30,7 @@ describe('Serverless Crypto Utilities - Password Hashing', () => {
 
     const [, salt, ] = stored.split(".");
 
-    assert.strictEqual(salt, saltBase64);
+    expect(salt).toBe(saltBase64);
   });
 
   it('should concatenate interations with hashed password', async () => {
@@ -41,27 +40,23 @@ describe('Serverless Crypto Utilities - Password Hashing', () => {
 
     const [iterations, , ] = stored.split(".");
 
-    assert.strictEqual(iterations, "500000");
+    expect(iterations).toBe("500000");
   });
 
   it('should fail if iterations is less than 1000', async () => {
-    await assert.rejects(async () => {
+    await expect(async () => {
       await hashPassword("minhaSenhaSecreta", {
         iterations: 500
       });
-    }, {
-      message: "Iterations must be at least 1000"
-    })
+    }).rejects.toThrow("Iterations must be at least 1000");
   });
 
   it('should fail if iterations is more than 1000000', async () => {
-    await assert.rejects(async () => {
+    await expect(async () => {
       await hashPassword("minhaSenhaSecreta", {
         iterations: 1500000
       });
-    }, {
-      message: "Iterations must be at most 1000000"
-    })
+    }).rejects.toThrow("Iterations must be at most 1000000");
   });
 
   it('should verify password with pepper successfully', async () => {
@@ -73,7 +68,7 @@ describe('Serverless Crypto Utilities - Password Hashing', () => {
       pepper: "myPepper"
     });
 
-    assert.ok(ok);
+    expect(ok).toBeTruthy();
   });
 
   it('should fail if pepper is incorrect', async () => {
@@ -85,6 +80,6 @@ describe('Serverless Crypto Utilities - Password Hashing', () => {
       pepper: "wrongPepper"
     });
 
-    assert.ok(!fail);
+    expect(fail).toBeFalsy();
   })
 });
