@@ -1,5 +1,7 @@
 # Password Hashing
 
+_[🇺🇸 English](../en/password-hashing.md) | 🇧🇷 Português_
+
 Criptografia de senhas simples e segura usando **PBKDF2** com **HMAC-SHA256**.
 
 Projetado para ambientes **Serverless/Edge**, como Cloudflare Workers, com suporte a **salt**, **pepper** e número configurável de **iterações**.

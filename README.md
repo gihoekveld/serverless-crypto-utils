@@ -1,92 +1,94 @@
 # 🔒 Serverless Crypto Utilities
 
+_🇺🇸 English | [🇧🇷 Português](README.pt-BR.md)_
+
 [![npm](https://img.shields.io/npm/v/serverless-crypto-utils)](https://www.npmjs.com/package/serverless-crypto-utils)
 [![npm downloads](https://img.shields.io/npm/dt/serverless-crypto-utils)](https://www.npmjs.com/package/serverless-crypto-utils)
 ![Build](https://github.com/gihoekveld/serverless-crypto-utils/actions/workflows/build.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Serverless Crypto Utilities é um pacote minimalista para operações criptográficas rápidas e seguras na Edge.
+A minimalist toolkit for fast and secure cryptographic operations on the Edge.
 
-O pacote fornece funções para **hashing, criptografia, geração de tokens e outras operações criptográficas**, projetadas para máxima performance, baixo bundle size e segurança nativa.
+This package provides functions for **hashing, encryption, token generation, and other cryptographic operations**, designed for maximum performance, low bundle size, and native security.
 
-Todas as funções utilizam exclusivamente a **Web Crypto API**, sem dependências externas.
+All functions use exclusively the **Web Crypto API** with zero external dependencies.
 
-## 🔹 Estrutura do Pacote
+## 🔹 Package Structure
 
-O pacote é dividido em categorias de funções:
+The package is organized into functional categories:
 
-| Categoria                                           | Descrição                                                                           | Exemplos de Funções                          |
-| :-------------------------------------------------- | :---------------------------------------------------------------------------------- | :------------------------------------------- |
-| password-hashing [README](docs/password-hashing.md) | Funções para gerar e verificar hashes de senhas (PBKDF2-HMAC-SHA256)                | `hashPassword`, `verifyPassword`             |
-| access-token [README](docs/access-token.md)         | Funções para criar e verificar tokens de acesso seguros (AES-256-GCM + HMAC-SHA256) | `createAccessToken`, `verifyAccessTokenSafe` |
-| id-generation [README](docs/id-generation.md)       | Funções para gerar IDs únicos                                                       | `uuidV4`, `ulid`                             |
-| criptografia [em breve]                             | Funções para criptografia simétrica e assimétrica                                   | `encrypt`, `decrypt`                         |
+| Category                                               | Description                                                                           | Example Functions                            |
+| :----------------------------------------------------- | :------------------------------------------------------------------------------------ | :------------------------------------------- |
+| password-hashing [README](docs/en/password-hashing.md) | Functions for generating and verifying password hashes (PBKDF2-HMAC-SHA256)           | `hashPassword`, `verifyPassword`             |
+| access-token [README](docs/en/access-token.md)         | Functions for creating and verifying secure access tokens (AES-256-GCM + HMAC-SHA256) | `createAccessToken`, `verifyAccessTokenSafe` |
+| id-generation [README](docs/en/id-generation.md)       | Functions for generating unique IDs                                                   | `uuidV4`, `ulid`                             |
+| encryption [coming soon]                               | Functions for symmetric and asymmetric encryption                                     | `encrypt`, `decrypt`                         |
 
-Atualmente o pacote inclui módulos para hashing de senhas, tokens de acesso seguros e geração de IDs. Novos módulos serão adicionados progressivamente.
+Currently, the package includes modules for password hashing, secure access tokens, and ID generation. New modules will be added progressively.
 
 ---
 
-## ✅ Por Que Usar?
+## ✅ Why Use This?
 
-- **Velocidade na Edge:** Utiliza a API nativa do _runtime_, otimizada para o _serverless_.
-- **Portabilidade:** Funciona em qualquer plataforma que suporte o _runtime_ Web Crypto (Cloudflare, Deno, etc.).
-- **Segurança:** Implementa algoritmos padrão do setor para autenticação e _hashing_ de senhas.
+- **Edge Speed:** Uses native runtime APIs optimized for serverless environments.
+- **Portability:** Works on any platform supporting Web Crypto runtime (Cloudflare Workers, Deno, etc.).
+- **Security:** Implements industry-standard algorithms for authentication and password hashing.
 
-## ⚡ Instalação
+## ⚡ Installation
 
 ```bash
 npm install serverless-crypto-utils
-# ou
+# or
 yarn add serverless-crypto-utils
-# ou
+# or
 pnpm add serverless-crypto-utils
 ```
 
 ## 📦 Bundle Size Optimization
 
-### Importação Modular vs Completa
+### Modular vs Full Import
 
-| Módulo             | Size (ESM) | Size (CJS) | Use Case                  |
-| :----------------- | :--------- | :--------- | :------------------------ |
-| `password-hashing` | 117 B      | 3.45 KB    | Apenas autenticação       |
-| `access-token`     | 219 B      | 9.43 KB    | Apenas tokens seguros     |
-| `id-generation`    | 85 B       | 1.64 KB    | Apenas geração de IDs     |
-| **Full package**   | 399 B      | 12.53 KB   | Múltiplas funcionalidades |
+| Module             | Size (ESM) | Size (CJS) | Use Case                 |
+| :----------------- | :--------- | :--------- | :----------------------- |
+| `password-hashing` | 117 B      | 3.45 KB    | Authentication only      |
+| `access-token`     | 219 B      | 9.43 KB    | Secure tokens only       |
+| `id-generation`    | 85 B       | 1.64 KB    | ID generation only       |
+| **Full package**   | 399 B      | 12.53 KB   | Multiple functionalities |
 
-### Exemplo de Otimização
+### Optimization Example
 
 ```typescript
-// ❌ Bundle maior (12.53 KB)
+// ❌ Larger bundle (12.53 KB)
 import { hashPassword } from "serverless-crypto-utils";
 
-// ✅ Bundle menor (3.45 KB)
+// ✅ Smaller bundle (3.45 KB)
 import { hashPassword } from "serverless-crypto-utils/password-hashing";
 ```
 
-**Redução de até 73% no bundle size** usando imports modulares! 🚀
+**Up to 73% bundle size reduction** using modular imports! 🚀
 
-Para reduzir o bundle size, você pode importar apenas as funções que precisa:
+To reduce bundle size, you can import only the functions you need:
 
 ```typescript
-// Apenas password hashing
+// Password hashing only
 import {
   hashPassword,
   verifyPassword,
 } from "serverless-crypto-utils/password-hashing";
 
-// Apenas access tokens
+// Access tokens only
 import {
   createAccessToken,
   verifyAccessTokenSafe,
 } from "serverless-crypto-utils/access-token";
 
-// Apenas ID generation
+// ID generation only
 import { uuidV4, ulid } from "serverless-crypto-utils/id-generation";
 ```
 
-### 📦 Import Completo
+### 📦 Full Import
 
-Ou importe tudo de uma vez:
+Or import everything at once:
 
 ```typescript
 import {
@@ -99,7 +101,7 @@ import {
 } from "serverless-crypto-utils";
 ```
 
-## 🚀 Uso Básico
+## 🚀 Basic Usage
 
 ### Password Hashing
 
@@ -111,11 +113,11 @@ import {
 
 const pepper = process.env.PEPPER || "secretGlobalPepper";
 
-const hash = await hashPassword("superSenha123", { pepper });
-const isValid = await verifyPassword("superSenha123", hash, { pepper });
+const hash = await hashPassword("superPassword123", { pepper });
+const isValid = await verifyPassword("superPassword123", hash, { pepper });
 
 console.log("Hash:", hash);
-console.log("Senha correta?", isValid);
+console.log("Password valid?", isValid);
 ```
 
 ### Access Token
@@ -127,15 +129,15 @@ import {
   TokenErrorCode,
 } from "serverless-crypto-utils/access-token";
 
-// Criar token
+// Create token
 const token = await createAccessToken({
   encryptionSecret: process.env.TOKEN_ENCRYPTION_SECRET,
   signingSecret: process.env.TOKEN_SIGNING_SECRET,
   payload: { userId: 123, role: "admin" },
-  expiresInSeconds: 900, // 15 minutos
+  expiresInSeconds: 900, // 15 minutes
 });
 
-// Verificar token
+// Verify token
 const result = await verifyAccessTokenSafe({
   encryptionSecret: process.env.TOKEN_ENCRYPTION_SECRET,
   signingSecret: process.env.TOKEN_SIGNING_SECRET,
@@ -144,9 +146,9 @@ const result = await verifyAccessTokenSafe({
 
 if (result.success) {
   const user = JSON.parse(result.data);
-  console.log("Acesso autorizado:", user.userId);
+  console.log("Access granted:", user.userId);
 } else {
-  console.log("Acesso negado:", result.error.message);
+  console.log("Access denied:", result.error.message);
 }
 ```
 
@@ -155,40 +157,41 @@ if (result.success) {
 ```typescript
 import { uuidV4, ulid } from "serverless-crypto-utils/id-generation";
 
-// Gerar UUID v4
+// Generate UUID v4
 const uuid = uuidV4();
 console.log("UUID:", uuid); // e.g. "3b12f1df-5232-4f0c-8b1d-3f3f9f1b5ec1"
 
-// Gerar ULID (lexicograficamente ordenável)
+// Generate ULID (lexicographically sortable)
 const ulidId = ulid();
 console.log("ULID:", ulidId); // e.g. "01F8MECHZX3TBDSZ7EXAMPLE"
 ```
 
-> Para detalhes completos, consulte:
+> For complete details, see:
 >
-> - [Password Hashing](docs/password-hashing.md)
-> - [Access Token](docs/access-token.md)
-> - [ID Generation](docs/id-generation.md)
+> - [Password Hashing](docs/en/password-hashing.md)
+> - [Access Token](docs/en/access-token.md)
+> - [ID Generation](docs/en/id-generation.md)
 
-## 🔒 Segurança
+## 🔒 Security
 
-- Todos os algoritmos usam a Web Crypto API nativa, garantindo segurança nativa e compatibilidade com Workers.
-- **Password Hashing**: Salt aleatório e pepper opcional para proteção adicional.
-- **Access Tokens**: Criptografia AES-256-GCM + assinatura HMAC-SHA256 com expiração automática.
-- **Comparações timing-safe** para evitar ataques de tempo.
-- **Zero dependências externas** para minimizar superfície de ataque.
+All algorithms use the native Web Crypto API, ensuring native security and Worker compatibility.
+
+- **Password Hashing**: Random salt and optional pepper for additional protection.
+- **Access Tokens**: AES-256-GCM encryption + HMAC-SHA256 signature with automatic expiration.
+- **Timing-safe comparisons** to prevent timing attacks.
+- **Zero external dependencies** to minimize attack surface.
 
 ## 📌 Roadmap
 
-| #   | Funcionalidade                            | Status    |
-| --- | ----------------------------------------- | --------- |
-| ✅  | Password hashing (PBKDF2-HMAC-SHA256)     | Concluído |
-| ✅  | Access tokens (AES-256-GCM + HMAC-SHA256) | Concluído |
-| ✅  | Geração de IDs únicos (UUID, ULID)        | Concluído |
-| 🔄  | Hashing genérico (SHA-256, SHA-512)       | Planejado |
-| 🔄  | Criptografia simétrica (AES-GCM)          | Planejado |
-| 🔄  | Helpers para JWT                          | Planejado |
+| #   | Feature                                   | Status   |
+| --- | ----------------------------------------- | -------- |
+| ✅  | Password hashing (PBKDF2-HMAC-SHA256)     | Complete |
+| ✅  | Access tokens (AES-256-GCM + HMAC-SHA256) | Complete |
+| ✅  | Unique ID generation (UUID, ULID)         | Complete |
+| 🔄  | Generic hashing (SHA-256, SHA-512)        | Planned  |
+| 🔄  | Symmetric encryption (AES-GCM)            | Planned  |
+| 🔄  | JWT helpers                               | Planned  |
 
-## 🤝 Contribuição
+## 🤝 Contributing
 
-Contribuições, sugestões e correções são bem-vindas! Abra issues ou PRs no GitHub para colaborar.
+Contributions, suggestions, and bug reports are welcome! Open issues or PRs on GitHub to collaborate.

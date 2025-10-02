@@ -1,5 +1,7 @@
 # Access Token
 
+_[🇺🇸 English](../en/access-token.md) | 🇧🇷 Português_
+
 Criação e verificação de tokens de acesso seguros usando **AES-256-GCM** para criptografia e **HMAC-SHA256** para assinatura.
 
 Projetado para ambientes **Serverless/Edge**, como Cloudflare Workers, com suporte a **criptografia**, **assinatura** e **expiração automática**.
