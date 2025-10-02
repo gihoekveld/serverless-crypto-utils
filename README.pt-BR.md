@@ -22,9 +22,9 @@ O pacote é dividido em categorias de funções:
 | password-hashing [README](docs/pt-BR/password-hashing.md) | Funções para gerar e verificar hashes de senhas (PBKDF2-HMAC-SHA256)                | `hashPassword`, `verifyPassword`             |
 | access-token [README](docs/pt-BR/access-token.md)         | Funções para criar e verificar tokens de acesso seguros (AES-256-GCM + HMAC-SHA256) | `createAccessToken`, `verifyAccessTokenSafe` |
 | id-generation [README](docs/pt-BR/id-generation.md)       | Funções para gerar IDs únicos                                                       | `uuidV4`, `ulid`                             |
-| criptografia [em breve]                                   | Funções para criptografia simétrica e assimétrica                                   | `encrypt`, `decrypt`                         |
+| encryption [README](docs/pt-BR/encryption.md)             | Funções para criptografia e descriptografia simétrica (AES-256-GCM)                 | `encrypt`, `decrypt`, `encryptObject`        |
 
-Atualmente o pacote inclui módulos para hashing de senhas, tokens de acesso seguros e geração de IDs. Novos módulos serão adicionados progressivamente.
+Atualmente o pacote inclui módulos para hashing de senhas, tokens de acesso seguros, geração de IDs e criptografia de dados. Novos módulos serão adicionados progressivamente.
 
 ---
 
@@ -53,19 +53,20 @@ pnpm add serverless-crypto-utils
 | `password-hashing` | 117 B      | 3.45 KB    | Apenas autenticação       |
 | `access-token`     | 219 B      | 9.43 KB    | Apenas tokens seguros     |
 | `id-generation`    | 85 B       | 1.64 KB    | Apenas geração de IDs     |
-| **Full package**   | 399 B      | 12.53 KB   | Múltiplas funcionalidades |
+| `encryption`       | 165 B      | 4.21 KB    | Apenas criptografia       |
+| **Full package**   | 564 B      | 16.74 KB   | Múltiplas funcionalidades |
 
 ### Exemplo de Otimização
 
 ```typescript
-// ❌ Bundle maior (12.53 KB)
+// ❌ Bundle maior (16.74 KB)
 import { hashPassword } from "serverless-crypto-utils";
 
 // ✅ Bundle menor (3.45 KB)
 import { hashPassword } from "serverless-crypto-utils/password-hashing";
 ```
 
-**Redução de até 73% no bundle size** usando imports modulares! 🚀
+**Redução de até 79% no bundle size** usando imports modulares! 🚀
 
 Para reduzir o bundle size, você pode importar apenas as funções que precisa:
 
@@ -84,6 +85,14 @@ import {
 
 // Apenas ID generation
 import { uuidV4, ulid } from "serverless-crypto-utils/id-generation";
+
+// Apenas criptografia
+import {
+  encrypt,
+  decrypt,
+  encryptObject,
+  decryptObject,
+} from "serverless-crypto-utils/encryption";
 ```
 
 ### 📦 Import Completo
@@ -98,6 +107,10 @@ import {
   verifyAccessTokenSafe,
   uuidV4,
   ulid,
+  encrypt,
+  decrypt,
+  encryptObject,
+  decryptObject,
 } from "serverless-crypto-utils";
 ```
 
@@ -152,6 +165,36 @@ if (result.success) {
 }
 ```
 
+### Criptografia de Dados
+
+```typescript
+import {
+  encrypt,
+  decrypt,
+  encryptObject,
+  decryptObject,
+} from "serverless-crypto-utils/encryption";
+
+const secret = process.env.ENCRYPTION_SECRET || "minhaChaveSecreta";
+
+// Criptografar string sensível
+const encrypted = await encrypt("dados sensíveis", secret);
+console.log("Criptografado:", encrypted); // "ivBase64.encryptedDataBase64"
+
+// Descriptografar de volta ao original
+const decrypted = await decrypt(encrypted, secret);
+console.log("Descriptografado:", decrypted); // "dados sensíveis"
+
+// Criptografar objetos
+const usuario = { id: 123, email: "usuario@exemplo.com" };
+const usuarioCriptografado = await encryptObject(usuario, secret);
+const usuarioDescriptografado = await decryptObject(
+  usuarioCriptografado,
+  secret
+);
+console.log("Usuário:", usuarioDescriptografado); // { id: 123, email: "usuario@exemplo.com" }
+```
+
 ### ID Generation
 
 ```typescript
@@ -171,6 +214,7 @@ console.log("ULID:", ulidId); // e.g. "01F8MECHZX3TBDSZ7EXAMPLE"
 > - [Password Hashing](docs/pt-BR/password-hashing.md)
 > - [Access Token](docs/pt-BR/access-token.md)
 > - [ID Generation](docs/pt-BR/id-generation.md)
+> - [Encryption](docs/pt-BR/encryption.md)
 
 ## 🔒 Segurança
 
@@ -188,8 +232,8 @@ Todos os algoritmos usam a Web Crypto API nativa, garantindo segurança nativa e
 | ✅  | Password hashing (PBKDF2-HMAC-SHA256)     | Concluído |
 | ✅  | Access tokens (AES-256-GCM + HMAC-SHA256) | Concluído |
 | ✅  | Geração de IDs únicos (UUID, ULID)        | Concluído |
+| ✅  | Criptografia de dados (AES-256-GCM)       | Concluído |
 | 🔄  | Hashing genérico (SHA-256, SHA-512)       | Planejado |
-| 🔄  | Criptografia simétrica (AES-GCM)          | Planejado |
 | 🔄  | Helpers para JWT                          | Planejado |
 
 ## 🤝 Contribuição

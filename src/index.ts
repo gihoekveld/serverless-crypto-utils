@@ -7,6 +7,18 @@ import {
   TokenErrorCode,
   type TokenResult
 } from "./access-token";
+import {
+  encrypt,
+  decrypt,
+  encryptObject,
+  decryptObject,
+  encryptSafe,
+  decryptSafe,
+  encryptObjectSafe,
+  decryptObjectSafe,
+  EncryptionErrorCode,
+  type EncryptionResult
+} from "./encryption";
 
 export {
   // Password hashing
@@ -22,5 +34,17 @@ export {
   verifyAccessToken,
   verifyAccessTokenSafe,
   TokenErrorCode,
-  type TokenResult
+  type TokenResult,
+  
+  // Encryption
+  encrypt,
+  decrypt,
+  encryptObject,
+  decryptObject,
+  encryptSafe,
+  decryptSafe,
+  encryptObjectSafe,
+  decryptObjectSafe,
+  EncryptionErrorCode,
+  type EncryptionResult
 }
